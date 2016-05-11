@@ -529,4 +529,5 @@ for x in range(10):
   emptyBoard.append([0]*10)
 getWins(emptyBoard, winningPlayer)
 
+print len(allMoves)
 print wins
