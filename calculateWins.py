@@ -1,33 +1,26 @@
 import copy
-import Queue
 
-winningPlayer = 2
-losingPlayer = 1
+winningPlayer = 1
+losingPlayer = 2
 
-ONE_HUNDRED_PRIMES = [2, 5, 11, 17, 23, 31, 41, 47, 59, 67, 73, 83, 97, 103, 109, 127, 137, 149, 157, 167, 179, 191, 197, 211, 227, 233, 241, 257, 269, 277, 283, 307, 313, 331, 347, 353, 367, 379, 389, 401, 419, 431, 439, 449, 461, 467, 487, 499, 509, 523, 541, 521, 503, 491, 479, 463, 457, 443, 433, 421, 409, 397, 383, 373, 359, 349, 337, 317, 311, 293, 281, 271, 263, 251, 239, 229, 223, 199, 193, 181, 173, 163, 151, 139, 131, 113, 107, 101, 89, 79, 71, 61, 53, 43, 37, 29, 19, 13, 7, 3]
+TWO_HUNDRED_PRIMES = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997,1009,1013,1019,1021,1031,1033,1039,1049,1051,1061,1063,1069,1087,1091,1093,1097,1103,1109,1117,1123,1129,1151,1153,1163,1171,1181,1187,1193,1201,1213,1217,1223]
 
-def getPossibleMoves(board, player):
-  moves = {}
+def getPossibleMoves(board):
+  moves = []
   for row, r in enumerate(board):
-    for column, c in enumerate(r):
-      if board[row][column] == 0:
-        newBoard = copy.deepcopy(board)
-        newBoard[row][column] = player
-        moves[(column, row)] = newBoard
+    for col, c in enumerate(r):
+      # Only include moves that are adjacent to already played pieces, or in the center of the board.
+      if board[row][col] == 0:
+        moves.append((row, col))
   return moves
 
-def getHash(board, player):
+def getHash(board):
   h = 0
-  for row, r in enumerate(board):
-    for column, c in enumerate(r):
-      piece = board[row][column]
-      if piece == 0:
-        multiplier = 0
-      elif piece == player:
-        multiplier = 1
-      else:
-        multiplier = -1
-      h += ONE_HUNDRED_PRIMES[row + column]*multiplier
+  for row in range(10):
+    for col in range(10):
+      piece = board[row][col]
+      if piece != 0:
+        h += TWO_HUNDRED_PRIMES[(row*10 + col)*piece]
   return h
 
 def printBoard(board):
@@ -515,24 +508,25 @@ def isWin(board, player, move):
 
 wins = set()
 allMoves = set()
-def getWins(board, lastPlayer):
+def getWins(board, player):
   global wins, allMoves
-  nextPlayer = 1 if lastPlayer == 2 else 2
-  moves = getPossibleMoves(board, nextPlayer)
-  for move, newBoard in moves.iteritems():
-    h = getHash(newBoard, winningPlayer)
+  nextPlayer = 1 if player == 2 else 2
+  moves = getPossibleMoves(board)
+  for move in moves:
+    board[move[0]][move[1]] = player
+    h = getHash(board)
     if h not in allMoves:
-      boardWins = isWin(newBoard, winningPlayer, move)
+      boardWins = isWin(board, winningPlayer, move)
       allMoves.add(h)
       if boardWins:
         wins.add(h)
       else:
-        getWins(newBoard, nextPlayer)
+        getWins(board, nextPlayer)
+    board[move[0]][move[1]] = 0
 
-board = []
-for r in range(10):
-  columns = [0]*10
-  board.append(columns)
-getWins(board, losingPlayer)
+emptyBoard = []
+for x in range(10):
+  emptyBoard.append([0]*10)
+getWins(emptyBoard, winningPlayer)
 
 print wins

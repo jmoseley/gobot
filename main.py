@@ -1,24 +1,29 @@
 import copy
 import sys
+import time
 
-MAX_DEPTH = 3
+currentPlayer = None
+
+playedMoves = set()
+
+MAX_TURN_LENGTH = 4.8
+MAX_DEPTH = 10
 
 MAX_INT = sys.maxint
 MIN_INT = -sys.maxint - 1
 
-PLAYER_1_WINS = set([0, 2, 3, 6, 9, 13, 17, 546, 20, 21, 24, 25, 32, 35, 36, 38, 39, 42, 48, 49, 52, 53, 58, 61, 62, 693, 65, 66, 67, 69, 74, 76, 77, 80, 696, 84, 85, 88, 94, 97, 102, 103, 106, 549, 110, 112, 113, 116, 118, 121, 124, 125, 126, 704, 130, 138, 141, 143, 145, 707, 149, 153, 154, 156, 164, 166, 167, 170, 172, 173, 174, 642, 176, 177, 182, 183, 186, 187, 189, 192, 194, 195, 198, 199, 201, 202, 207, 209, 212, 213, 216, 219, 225, 227, 553, 721, 234, 241, 242, 243, 245, 249, 251, 252, 255, 257, 258, 726, 263, 265, 268, 269, 728, 276, 281, 283, 284, 293, 295, 299, 301, 733, 305, 307, 309, 312, 314, 315, 317, 319, 320, 322, 323, 325, 326, 737, 329, 761, 333, 334, 336, 341, 344, 349, 350, 358, 360, 361, 362, 743, 367, 368, 369, 370, 373, 745, 379, 380, 382, 405, 384, 385, 386, 387, 390, 763, 394, 397, 749, 400, 401, 402, 403, 750, 409, 410, 412, 415, 419, 420, 421, 422, -11, 425, 426, 427, 429, 430, 786, 433, 434, 436, 437, 438, 439, 440, 442, 443, 445, 447, 448, 449, 450, 451, 454, 465, 466, -1581, 469, 471, 475, 476, 477, 478, 479, 483, 488, 489, 490, -1557, -1551, 501, -1545, 504, -1539, 511, -1535, 515, 519, -1527, -1523, 527, 529, -1518, -1515, 534, 535, -1511, 539, 540, -1506, -1505, 544, -1503, -1502, 547, -1499, 551, -1495, 554, -1493, 556, -1490, -1487, 564, -1483, -1482, -1481, 568, 569, 570, 778, -1472, 578, -1469, 580, 581, -1466, -1462, 587, -1460, -1459, 590, -1457, 593, -1453, 597, -1450, -1449, -1448, -1447, 602, -1445, 604, 605, -1442, -1441, -1439, -1437, -1436, 614, -1432, -1430, 621, -1426, -1425, -1424, 625, -1420, -1419, -1418, -1417, -1416, -1415, -1413, 637, 638, -1409, -1408, -1407, -1406, -1405, -1404, -1403, -1401, 639, 650, -1397, -1396, -1395, -1394, 655, -1392, 658, -1389, -1388, -1386, -1385, -1384, -1383, -1382, 667, -1380, 669, -1376, 673, -1374, 675, -1371, 678, -1368, -1367, 682, 683, -1364, -1363, 686, -1361, -1359, 690, -1357, 692, -1355, -1352, -1351, -1350, -1349, 700, 701, -1346, -1344, -1343, 706, -1341, -1340, -1339, -1338, 711, 712, 713, -1334, -1332, -1331, -1330, -1329, -1328, -1327, -1326, 724, -1322, -1321, -1320, -1319, -1318, -1317, -1315, 736, -1311, -1310, -1309, -1308, -1307, -1306, -1305, -1304, -1303, -1301, -1300, -1299, -1298, -1296, -1294, -1293, -1291, -1290, -1288, -1287, -1286, -1285, 764, -1283, -1282, -1279, -1278, -1276, -1275, -1273, 777, -1270, -1267, -1266, -1265, -1264, -1262, 787, -1259, 814, -1257, -1255, -1254, -1253, -1252, -1250, -1249, -1248, 801, -1243, -1242, -1240, -1238, -1237, 812, -1235, -1234, -1231, -1227, -1225, -1223, -1222, -1219, 832, -1215, -1214, -1213, -1212, -1207, -1204, -1201, -1198, -1194, -1193, -1192, -1189, -1186, -1185, 864, -1182, -1180, -1179, -1177, -1175, -1174, -1173, -1171, -1170, -1169, -1168, -1164, -1163, -1162, -1159, -1158, -1157, -1156, -1152, -1151, -1148, -1147, -1146, -1145, -1141, -1140, -1139, -1138, -1137, -1136, -1135, -1134, -1133, -1129, -1128, -1127, -1126, -1124, -1123, -1121, -1120, -1118, -1117, -1116, -1114, -1112, -1108, -1106, -1104, -1103, -1100, -1096, -1093, -1091, -1089, -1087, 782, 770, -1083, -1082, -1081, -1078, 503, -1075, -1073, -1072, -1071, -1070, -1066, -1064, -1063, -1062, -1061, -1060, -1059, -1058, -1054, -1052, -1051, -1050, -1049, -1048, -1047, 647, -1043, -1042, -1039, -1038, -1037, -1035, -1032, -1031, -1030, -1028, -1026, -1025, -1024, -1023, -1022, -1020, -1019, 513, -1016, -1015, -1014, -1011, -1010, -1008, -1007, -1003, -998, 175, -996, -995, -994, -987, -984, -983, -982, 798, -980, -977, -976, -975, -974, -972, -971, 521, -967, -966, -965, -962, -959, -954, -953, -952, -950, -947, -946, 525, -944, -943, -941, -938, -935, -932, -931, -930, -929, -926, -925, 651, -923, 662, -920, -918, -917, -914, 856, -911, -910, -908, -904, -902, -901, -899, -897, -896, -895, -893, -892, -891, -890, -889, -887, -883, -881, -880, -879, -878, -874, -873, -872, -871, -869, -868, -867, -866, -864, -862, -861, -860, -859, -858, -857, -856, -855, -854, -853, -851, -850, -849, -848, -847, -846, -843, -841, -838, -837, -836, -834, -831, -830, -828, -827, -826, -825, -824, 649, -822, -819, -818, -816, -815, -813, -811, -809, -807, -806, -804, -801, -799, -798, -795, -794, -792, -789, -788, -787, -786, -783, -782, -781, -780, -779, -777, -776, -775, -774, -771, -769, 588, -767, -765, -763, -762, -761, -759, -757, -756, -755, 63, -753, -752, -750, -747, -746, -745, -744, -743, -739, -738, -737, -734, -733, -732, -731, 561, -726, -725, -719, -715, -714, -713, -710, -709, -708, -705, -704, -703, -702, -700, -699, -697, -694, -692, -691, -690, -688, -686, -685, -682, -681, -680, -679, -677, -676, -675, -674, -673, -671, -669, -668, -667, -666, -664, -661, -660, -659, -658, -657, -654, -652, -648, -646, -645, -643, -642, -641, -640, 576, -634, -633, -628, -624, -623, -619, -618, -617, -615, -614, -611, -608, -607, -606, -605, -604, 582, -602, -601, -600, -599, -597, -596, -594, -593, -592, -591, -587, -586, -585, -584, -582, -581, -580, -578, -572, -570, -567, -566, -565, -563, 589, -557, -554, -551, -549, -548, -547, -545, -544, -542, -539, -538, -535, -534, -532, -530, 542, -528, -525, -523, -521, -517, -516, -514, -513, -512, -511, 800, -509, -507, -502, -500, -499, -497, -496, 600, -492, -490, -487, -486, -483, -481, -479, -478, -476, -474, -472, -471, -469, -467, -465, -463, -460, -457, -456, -455, -454, -451, -450, -15, -444, -443, -441, -439, -437, -433, -432, -431, -429, -427, -426, -425, -423, -421, -420, -419, -415, -414, -413, -412, -410, -409, -408, -405, -402, -401, -400, -399, -398, -397, -395, -394, -393, -391, -390, -387, -386, -383, -381, -376, -370, -367, 806, -364, 622, -362, -360, -359, -358, -357, -356, -355, -353, -352, -351, -348, -345, -344, -339, -338, 775, -334, -332, -331, -330, -329, -325, -324, 629, -320, -318, -317, 630, -314, -313, -311, -309, -307, -306, 632, -302, -300, -299, -297, -296, -295, -294, -292, -290, -288, -286, -285, -283, -282, -280, -278, -276, -275, -274, -273, -272, -271, -267, -265, -264, -262, -261, -260, -259, -257, -255, -254, -253, -252, -250, 641, -246, -244, -243, -241, -240, -238, -234, -233, -232, -231, -230, -229, -225, -223, -222, -221, -220, -219, -218, -217, -215, -213, -211, -210, -208, -204, -201, -199, -198, -196, -194, -191, -190, -189, -188, -187, -186, -183, -181, -180, -179, -178, -176, -175, -171, -168, -166, -164, -162, -161, -160, -157, -156, -155, -154, -152, -151, 537, -148, -147, -146, -145, -144, -141, -139, 609, 660, -134, -132, -127, 640, -124, -123, -122, -120, -119, -118, -117, -114, -113, -112, -111, -110, -109, -108, -107, -106, -105, -102, -101, 231, -99, -97, -96, -94, -93, -90, 747, -88, 327, -84, -82, -79, -75, -73, 543, -71, -70, -69, -67, -65, -63, 331, -60, -57, -2, -53, -52, 674, -50, -48, 612, -44, -43, -42, -39, -37, -36, 677, -29, -23, -19, 680, -12, 545, -8, -5, -4, -1])
-PLAYER_2_WINS = set([2, 3, 4, 1023, 8, 9, 10, 12, 1026, 14, 15, 17, 20, 21, 22, 1028, 26, 28, 30, 32, 36, 38, 41, 956, 46, 48, 52, 54, 56, 58, 59, 60, 1034, 65, 66, 68, 71, 72, 76, 77, 78, 80, 81, 83, 84, 1038, 86, 88, 89, 698, 95, 1040, 98, 99, 101, 102, 105, 107, 108, 109, 110, 111, 112, 113, 116, 117, 119, 1044, 122, 127, 128, 129, 131, 959, 1010, 135, 136, 137, 140, 141, 143, 146, 151, 152, 153, 155, 1050, 159, 161, 1051, 164, 165, 167, 170, 176, 712, 183, 188, 191, 192, 1056, 194, 195, 196, 200, 209, 7, 217, 220, 222, 225, 231, 232, 233, 237, 241, 242, 243, 244, 245, 246, 247, 249, 251, 252, 258, 259, 261, 262, 266, 267, 270, 271, 272, 274, 276, 277, 278, 280, 281, 1071, 284, 287, 288, 289, 295, 296, 298, 299, 300, 301, 302, 305, 308, 310, 312, 313, 965, 315, 317, 318, 319, 321, 323, 326, 328, 329, 330, 331, 335, 336, 338, 339, 341, 342, 343, 345, 346, 348, 349, 352, 354, 356, 358, 359, 360, 363, 364, 365, 366, 369, 371, 375, 376, 377, 380, 382, 383, 384, 385, 388, 390, 393, 395, 397, 398, 399, 400, 401, 403, 404, 405, 1092, 411, 413, 417, 419, 421, 423, 424, 425, 426, 428, 429, 430, 433, 434, 437, 438, 439, 440, 441, 446, 447, 451, 452, 454, 455, 457, 459, 460, 461, 462, 464, 465, 467, 1007, 471, 473, 475, 476, 478, 480, 482, 483, 486, 487, 488, 489, 491, 1106, 495, 497, 500, 504, 1108, 507, 508, 85, 511, 513, 516, 517, 518, 519, 522, 523, 525, 527, 529, 534, 536, 537, 541, 542, 543, 547, 550, 552, 554, 555, 558, 559, 562, 563, 565, 566, 567, 570, 572, 573, 574, 575, 576, 582, 583, 974, 588, 591, 594, 595, 599, 601, 602, 603, 604, 606, 607, 608, 611, 612, 617, 618, 619, 620, 621, 622, 623, 624, 625, 626, 629, 630, 631, 634, 642, 644, 648, 1132, 650, 652, 654, 655, 658, 660, 661, 662, 665, 666, 667, 669, 670, 671, 1136, 980, 675, 678, 679, 680, 681, 682, 684, 685, 686, 687, 688, 694, 1046, 699, 700, 703, 704, 705, 706, 708, 709, 710, 932, 714, 715, 716, 718, 720, 721, 724, 726, 727, 729, 730, 732, 733, 1014, 735, 736, 746, 749, 750, 753, 754, 755, 756, 757, 760, 761, 762, 763, 764, 766, 469, 768, 769, 770, 774, 775, 778, 780, 781, 783, 784, 785, 786, 787, 789, 790, 792, 796, 798, 133, 801, 802, 803, 804, 134, 809, 810, 812, 814, 816, 817, 818, 820, 822, 823, 824, 825, 829, 832, 833, 834, 505, 838, 839, 840, 841, 843, 844, 845, 846, 849, 850, 852, 854, 855, 857, 858, 859, 861, 863, 864, 1168, 866, 867, 868, 869, 870, 871, 872, 874, 877, 878, 879, 880, 882, 884, 886, 888, 889, 891, 892, 894, 897, 898, 899, 900, 902, 903, 904, 908, 909, 910, 911, 915, 917, 918, 919, 920, 921, 922, 924, 925, 926, 928, 930, -1116, 934, 935, 937, 938, 940, 941, 942, 943, -1104, 945, 946, -1101, 948, 950, 954, -1092, 958, -1089, 960, -1086, -1083, 966, -1080, 970, -1077, -1076, -1074, -1073, -1071, -1070, 163, -1068, -1065, -1064, 985, -1062, -1059, 990, 991, -1056, -1053, 996, 997, -1050, -1049, 1000, -1047, -1046, 1003, -1044, -1043, 1006, -1041, -1040, -1038, -1037, 1012, -1035, -1034, -1033, -1032, -1031, 1018, -1029, -1028, -1027, -1026, -1025, -1023, -1022, -1021, -1020, -1019, 1030, -1017, -1016, 1033, -1014, -1013, -1011, -1010, -1009, -1008, -1007, 1042, -1005, -1004, 1045, -1002, -1001, 1048, -998, -997, -995, 1054, -992, -991, -989, 1060, -987, 1062, -985, -984, -981, -979, -977, 157, -974, 1076, 986, -969, 1082, -965, -962, -961, 1088, 1090, -957, -956, -955, -952, -951, 1098, -949, 1100, -945, -943, -942, -941, -940, 1110, -937, -933, -927, -925, -924, 1126, -921, -920, -918, -917, -916, -915, -912, -911, -909, -908, -906, -905, -903, -900, -899, -893, -890, 193, -888, -887, -884, -883, -881, -880, -878, -877, -876, -875, -872, -871, -870, -869, -867, -866, -865, -863, 1186, -860, -857, -856, -854, -853, -852, -850, -849, -848, -847, -844, -843, -842, -841, -839, -838, -836, 995, -832, -831, -830, -829, -826, -825, -824, -823, -821, -820, -819, -817, -815, -814, -813, -812, -811, -810, -809, -808, -807, -806, -804, -803, -802, -801, -799, -798, -797, -796, -795, -793, -792, -790, -789, -787, -786, -785, -783, -780, -779, -778, -776, -775, -774, -773, -772, -771, -769, -768, 1004, -765, -761, -759, -757, -755, -754, -751, -750, -749, -745, -744, -743, -741, -740, -737, -736, -734, -733, -731, -730, -729, -727, -726, -723, -722, -719, -718, -717, -716, -715, -713, -709, -706, -705, -699, -698, -694, -693, -692, -689, -688, -687, -685, -684, -681, -680, -678, -677, -676, -675, -674, -673, -671, -667, -666, -664, -661, -660, -657, -656, -655, -654, -653, -652, -650, -649, -648, -643, -642, -633, -632, -631, -629, -628, -625, -624, 1002, -622, -620, -619, -618, -617, -615, -614, -611, -607, -606, -605, -604, -601, -600, -598, -597, -596, -594, -592, -591, -589, -587, -586, -585, -582, -580, -579, -578, -576, -573, -567, -566, -563, -562, -561, -559, -558, -557, -554, -552, -551, -549, -548, -547, -545, -544, -540, -539, -535, -534, -533, -530, -528, -523, -522, -521, -518, -517, -516, -512, -510, -509, -503, -500, -498, -497, -496, -492, -491, -490, -487, -486, -479, -478, -473, -472, -469, -468, -466, -464, -463, -460, -459, -455, -454, -453, -452, -449, -445, -441, -440, -439, -437, -435, -434, -433, -431, -430, -428, -427, 673, -424, -423, -422, -421, -420, -419, -417, -416, -414, -412, -410, -409, -407, -403, -402, -400, -398, -397, -396, -395, -393, -389, -385, -384, -383, -382, -381, -379, -374, 962, -370, -368, -367, -365, -364, -361, -360, -358, -357, -356, -354, -353, -351, -350, 93, -344, -343, -341, -340, -339, -337, 968, -333, -332, -331, -330, -329, -328, -326, -325, -323, -322, -319, -318, -316, -315, -314, -313, -312, -309, -308, -305, -304, -303, -301, -300, -299, -298, -297, -295, -294, -291, -290, -288, -286, -285, -281, -280, -277, -276, 978, -274, -273, -271, -270, -267, -266, -264, -263, -262, -260, -259, -258, -257, -255, -253, -252, -249, -248, -246, -243, -239, -238, -235, -234, -231, -230, -229, -228, -227, -225, -224, -221, -220, -218, -217, -216, -215, -214, -211, -210, -209, -207, -204, -203, -201, -200, -199, -197, -196, -194, -191, -190, -189, -188, -187, -186, -185, -183, -182, -179, -178, -176, -175, -173, -1, -168, -164, -161, -158, -157, -154, -150, -148, -147, -146, -145, -141, -140, 1001, -134, -131, -129, -127, -125, -123, -122, -119, -116, -114, -113, -112, -109, -108, -107, -106, -104, -102, -101, -98, -96, 1008, -94, -92, -91, -90, 649, 1020, -81, -79, -76, -75, -74, -73, -71, -70, -69, -67, 1013, -64, -63, -59, -58, -57, -56, -55, -53, -52, -51, -49, -48, -47, -46, -42, -41, -40, -36, -35, -32, -31, -30, -24, -23, -20, -18, 1021, -14, 1022, -8, -5, -3, -2])
+HEURISTIC_VALUES =[100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 200, 200, 200, 200, 200, 200, 200, 200, 100, 100, 200, 300, 300, 300, 300, 300, 300, 200, 100, 100, 200, 300, 400, 400, 400, 400, 300, 200, 100, 100, 200, 300, 400, 500, 500, 400, 300, 200, 100, 100, 200, 300, 400, 500, 500, 400, 300, 200, 100, 100, 200, 300, 400, 400, 400, 400, 300, 200, 100, 100, 200, 300, 300, 300, 300, 300, 300, 200, 100, 100, 200, 200, 200, 200, 200, 200, 200, 200, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100]
 
-ONE_HUNDRED_PRIMES = [2, 5, 11, 17, 23, 31, 41, 47, 59, 67, 73, 83, 97, 103, 109, 127, 137, 149, 157, 167, 179, 191, 197, 211, 227, 233, 241, 257, 269, 277, 283, 307, 313, 331, 347, 353, 367, 379, 389, 401, 419, 431, 439, 449, 461, 467, 487, 499, 509, 523, 541, 521, 503, 491, 479, 463, 457, 443, 433, 421, 409, 397, 383, 373, 359, 349, 337, 317, 311, 293, 281, 271, 263, 251, 239, 229, 223, 199, 193, 181, 173, 163, 151, 139, 131, 113, 107, 101, 89, 79, 71, 61, 53, 43, 37, 29, 19, 13, 7, 3]
+TWO_HUNDRED_PRIMES = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79,83,89,97,101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257,263,269,271,277,281,283,293,307,311,313,317,331,337,347,349,353,359,367,373,379,383,389,397,401,409,419,421,431,433,439,443,449,457,461,463,467,479,487,491,499,503,509,521,523,541,547,557,563,569,571,577,587,593,599,601,607,613,617,619,631,641,643,647,653,659,661,673,677,683,691,701,709,719,727,733,739,743,751,757,761,769,773,787,797,809,811,821,823,827,829,839,853,857,859,863,877,881,883,887,907,911,919,929,937,941,947,953,967,971,977,983,991,997,1009,1013,1019,1021,1031,1033,1039,1049,1051,1061,1063,1069,1087,1091,1093,1097,1103,1109,1117,1123,1129,1151,1153,1163,1171,1181,1187,1193,1201,1213,1217,1223]
 
 def printBoard(board):
   for row in board:
     print ' '.join([ '%s' % r for r in row ])
 
-def getPossibleMoves(board, player):
-  moves = {}
-  for row, r in enumerate(board):
-    for col, c in enumerate(r):
+def getPossibleMoves(board):
+  moves = []
+  for row in range(10): #[5, 4, 6, 3, 7, 2, 8, 1, 9, 0]:
+    for col in range(10): #[5, 4, 6, 3, 7, 2, 8, 1, 9, 0]:
       # Only include moves that are adjacent to already played pieces, or in the center of the board.
       if board[row][col] == 0 and (
           (row - 1 >= 0 and (
@@ -35,75 +40,623 @@ def getPossibleMoves(board, player):
           (col - 1 >= 0 and board[row][col - 1] != 0) or
           (row >= 4 and row <= 6 and col >= 4 and col <= 6)
         ):
-        newBoard = copy.deepcopy(board)
-        newBoard[row][col] = player
-        moves['%s %s' % (col, row)] = newBoard
+        moves.append((row, col))
   return moves
 
-# This hash is geared towards pieces in the center of the board.
-def getHash(board, player):
+def getHash(board):
   h = 0
-  for row, r in enumerate(board):
-    for column, c in enumerate(r):
-      piece = board[row][column]
-      if piece == 0:
-        multiplier = 0
-      elif piece == player:
-        multiplier = 1
-      else:
-        multiplier = -1
-      h += ONE_HUNDRED_PRIMES[row + column]*multiplier
+  for row in range(10):
+    for col in range(10):
+      piece = board[row][col]
+      if piece != 0:
+        h += TWO_HUNDRED_PRIMES[(row*10 + col)*piece]
   return h
 
-def max_play(board, player, depth):
-  h = getHash(board, player)
-  # Bail out for final board states.
-  if player == 1 and h in PLAYER_1_WINS:
-    return int(MAX_INT / depth)
-  elif player == 2 and h in PLAYER_2_WINS:
-    return int(MAX_INT / depth)
+def isWin(board, player, move):
+  row = move[0]
+  col = move[1]
+  # Horizontal
+  # P * * * *
+  if col <= 5:
+    if board[row][col + 1] == player and board[row][col + 2] == player and board[row][col + 3] == player and board[row][col + 4] == player:
+      # Ensure exactly 5 for player 1.
+      if player == 1:
+        if col + 5 < 10:
+          if board[row][col + 5] != player:
+            if col - 1 >= 0:
+              if board[row][col - 1] != player:
+                return True
+            else:
+              return True
+        else:
+          if col - 1 >= 0:
+            if board[row][col - 1] != player:
+              return True
+          else:
+            return True
+      else:
+        return True
 
-  # Bail out when we get too deep.
-  if depth > MAX_DEPTH:
-    return h
+    # * P * * *
+    if col <= 6 and col >= 1:
+      if board[row][col - 1] == player and board[row][col + 1] == player and board[row][col + 2] == player and board[row][col + 3] == player:
+        # Ensure exactly 5 for player 1.
+        if player == 1:
+          if col + 4 < 10:
+            if board[row][col + 4] != player:
+              if col - 2 >= 0:
+                if board[row][col - 2] != player:
+                  return True
+              else:
+                return True
+          else:
+            if col - 2 >= 0:
+              if board[row][col - 2] != player:
+                return True
+            else:
+              return True
+        else:
+          return True
 
+      # * * P * *
+      if col <= 7 and col >= 2:
+        if board[row][col - 2] == player and board[row][col - 1] == player and board[row][col + 1] == player and board[row][col + 2] == player:
+          # Ensure exactly 5 for player 1.
+          if player == 1:
+            if col + 3 < 10:
+              if board[row][col + 3] != player:
+                if col - 3 >= 0:
+                  if board[row][col - 3] != player:
+                    return True
+                else:
+                  return True
+            else:
+              if col - 3 >= 0:
+                if board[row][col - 3] != player:
+                  return True
+              else:
+                return True
+          else:
+            return True
+
+        # * * * P *
+        if col <= 8 and col >= 3:
+          if board[row][col - 3] == player and board[row][col - 2] == player and board[row][col - 1] == player and board[row][col + 1] == player:
+            # Ensure exactly 5 for player 1.
+            if player == 1:
+              if col + 2 < 10:
+                if board[row][col + 2] != player:
+                  if col - 4 >= 0:
+                    if board[row][col - 4] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                if col - 4 >= 0:
+                  if board[row][col - 4] != player:
+                    return True
+                else:
+                  return True
+            else:
+              return True
+
+          # * * * * P
+          if col >= 4:
+            if board[row][col - 4] == player and board[row][col - 3] == player and board[row][col - 2] == player and board[row][col - 1] == player:
+              # Ensure exactly 5 for player 1.
+              if player == 1:
+                if col + 1 < 10:
+                  if board[row][col + 1] != player:
+                    if col - 5 >= 0:
+                      if board[row][col - 5] != player:
+                        return True
+                    else:
+                      return True
+                else:
+                  if col - 5 >= 0:
+                    if board[row][col - 5] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                return True
+
+  # Vertical
+  # P
+  # *
+  # *
+  # *
+  # *
+  if row <= 5:
+    if board[row + 1][col] == player and board[row + 2][col] == player and board[row + 3][col] == player and board[row + 4][col] == player:
+      # Ensure exactly 5 for player 1.
+      if player == 1:
+        if row + 5 < 10:
+          if board[row + 5][col] != player:
+            if row - 1 >= 0:
+              if board[row - 1][col] != player:
+                return True
+            else:
+              return True
+        else:
+          if row - 1 >= 0:
+            if board[row - 1][col] != player:
+              return True
+          else:
+            return True
+      else:
+        return True
+
+    # *
+    # P
+    # *
+    # *
+    # *
+    if row <= 6 and row >= 1:
+      if board[row - 1][col] == player and board[row + 1][col] == player and board[row + 2][col] == player and board[row + 3][col] == player:
+        # Ensure exactly 5 for player 1.
+        if player == 1:
+          if row + 4 < 10:
+            if board[row + 4][col] != player:
+              if row - 2 >= 0:
+                if board[row - 2][col] != player:
+                  return True
+              else:
+                return True
+          else:
+            if row - 2 >= 0:
+              if board[row - 2][col] != player:
+                return True
+            else:
+              return True
+        else:
+          return True
+
+      # *
+      # *
+      # P
+      # *
+      # *
+      if row <= 7 and row >= 2:
+        if board[row - 2][col] == player and board[row - 1][col] == player and board[row + 1][col] == player and board[row + 2][col] == player:
+          # Ensure exactly 5 for player 1.
+          if player == 1:
+            if row + 3 < 10:
+              if board[row + 3][col] != player:
+                if row - 3 >= 0:
+                  if board[row - 3][col] != player:
+                    return True
+                else:
+                  return True
+            else:
+              if row - 3 >= 0:
+                if board[row - 3][col] != player:
+                  return True
+              else:
+                return True
+          else:
+            return True
+
+        # *
+        # *
+        # *
+        # P
+        # *
+        if row <= 8 and row >= 3:
+          if board[row - 3][col] == player and board[row - 2][col] == player and board[row - 1][col] == player and board[row + 1][col] == player:
+            # Ensure exactly 5 for player 1.
+            if player == 1:
+              if row + 2 < 10:
+                if board[row + 2][col] != player:
+                  if row - 4 >= 0:
+                    if board[row - 4][col] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                if row - 4 >= 0:
+                  if board[row - 4][col] != player:
+                    return True
+                else:
+                  return True
+            else:
+              return True
+
+          # *
+          # *
+          # *
+          # *
+          # P
+          if row >= 4:
+            if board[row - 4][col] == player and board[row - 3][col] == player and board[row - 2][col] == player and board[row - 1][col] == player:
+              # Ensure exactly 5 for player 1.
+              if player == 1:
+                if row + 1 < 10:
+                  if board[row + 1][col] != player:
+                    if row - 5 >= 0:
+                      if board[row - 5][col] != player:
+                        return True
+                    else:
+                      return True
+                else:
+                  if row - 5 >= 0:
+                    if board[row - 5][col] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                return True
+
+    # Diagonal (Right)
+    # P
+    #   *
+    #     *
+    #       *
+    #         *
+    if row <= 5 and col <= 5:
+      if board[row + 1][col + 1] == player and board[row + 2][col + 2] == player and board[row + 3][col + 3] == player and board[row + 4][col + 4] == player:
+        if player == 1:
+          if row + 5 < 10 and col + 5 < 10:
+            if board[row + 5][col + 5] != player:
+              if row - 1 >= 0 and col - 1 >= 0:
+                if board[row - 1][col - 1] != player:
+                  return True
+              else:
+                return True
+          else:
+            if row - 1 >= 0 and col - 1 >= 0:
+              if board[row - 1][col - 1] != player:
+                return True
+            else:
+              return True
+        else:
+          return True
+
+      # *
+      #   P
+      #     *
+      #       *
+      #         *
+      if row <= 6 and col <= 6 and row >= 1 and col >= 1:
+        if board[row - 1][col - 1] == player and board[row + 1][col + 1] == player and board[row + 2][col + 2] == player and board[row + 3][col + 3] == player:
+          if player == 1:
+            if row + 4 < 10 and col + 4 < 10:
+              if board[row + 4][col + 4] != player:
+                if row - 2 >= 0 and col - 2 >= 0:
+                  if board[row - 2][col - 2] != player:
+                    return True
+                else:
+                  return True
+            else:
+              if row - 2 >= 0 and col - 2 >= 0:
+                if board[row - 2][col - 2] != player:
+                  return True
+              else:
+                return True
+          else:
+            return True
+
+        # *
+        #   *
+        #     P
+        #       *
+        #         *
+        if row <= 7 and col <= 7 and row >= 2 and col >= 2:
+          if board[row - 1][col - 1] == player and board[row - 2][col - 2] == player and board[row + 1][col + 1] == player and board[row + 2][col + 2] == player:
+            if player == 1:
+              if row + 3 < 10 and col + 3 < 10:
+                if board[row + 3][col + 3] != player:
+                  if row - 3 >= 0 and col - 3 >= 0:
+                    if board[row - 3][col - 3] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                if row - 3 >= 0 and col - 3 >= 0:
+                  if board[row - 3][col - 3] != player:
+                    return True
+                else:
+                  return True
+            else:
+              return True
+
+          # *
+          #   *
+          #     *
+          #       P
+          #         *
+          if row <= 8 and col <= 8 and row >= 3 and col >= 3:
+            if board[row - 3][col - 3] == player and board[row - 2][col - 2] == player and board[row - 1][col - 1] == player and board[row + 1][col + 1] == player:
+              if player == 1:
+                if row + 2 < 10 and col + 2 < 10:
+                  if board[row + 2][col + 2] != player:
+                    if row - 4 >= 0 and col - 4 >= 0:
+                      if board[row - 4][col - 4] != player:
+                        return True
+                    else:
+                      return True
+                else:
+                  if row - 4 >= 0 and col - 4 >= 0:
+                    if board[row - 4][col - 4] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                return True
+
+            # *
+            #   *
+            #     *
+            #       *
+            #         P
+            if row >= 4 and col >= 4:
+              if board[row - 4][col - 4] == player and board[row - 3][col - 3] == player and board[row - 2][col - 2] == player and board[row - 1][col - 1] == player:
+                if player == 1:
+                  if row + 1 < 10 and col + 1 < 10:
+                    if board[row + 1][col + 1] != player:
+                      if row - 5 >= 0 and col - 5 >= 0:
+                        if board[row - 5][col - 5] != player:
+                          return True
+                      else:
+                        return True
+                  else:
+                    if row - 5 >= 0 and col - 5 >= 0:
+                      if board[row - 5][col - 5] != player:
+                        return True
+                    else:
+                      return True
+                else:
+                  return True
+
+    # Diagonal (Left)
+    #         P
+    #       *
+    #     *
+    #   *
+    # *
+    if row <= 5 and col >= 4:
+      if board[row + 1][col - 1] == player and board[row + 2][col - 2] == player and board[row + 3][col - 3] == player and board[row + 4][col - 4] == player:
+        if player == 1:
+          if row + 5 < 10 and col - 5 >= 0:
+            if board[row + 5][col - 5] != player:
+              if row - 1 >= 0 and col + 1 < 10:
+                if board[row - 1][col + 1] != player:
+                  return True
+              else:
+                return True
+          else:
+            if row - 1 >= 0 and col + 1 < 10:
+              if board[row - 1][col + 1] != player:
+                return True
+            else:
+              return True
+        else:
+          return True
+
+      #          *
+      #        P
+      #     *
+      #   *
+      # *
+      if row <= 6 and col >= 3 and row >= 1 and col <= 8:
+        if board[row - 1][col + 1] == player and board[row + 1][col - 1] == player and board[row + 2][col - 2] == player and board[row + 3][col - 3] == player:
+          if player == 1:
+            if row + 4 < 10 and col - 4 >= 0:
+              if board[row + 4][col - 4] != player:
+                if row - 2 >= 0 and col + 2 < 10:
+                  if board[row - 2][col + 2] != player:
+                    return True
+                else:
+                  return True
+            else:
+              if row - 2 >= 0 and col + 2 < 10:
+                if board[row - 2][col + 2] != player:
+                  return True
+              else:
+                return True
+          else:
+            return True
+
+        #          *
+        #        *
+        #     P
+        #   *
+        # *
+        if row <= 7 and col >= 2 and row >= 2 and col <= 7:
+          if board[row - 2][col + 2] == player and board[row - 1][col + 1] == player and board[row + 1][col - 1] == player and board[row + 2][col - 2] == player:
+            if player == 1:
+              if row + 3 < 10 and col - 3 >= 0:
+                if board[row + 3][col - 3] != player:
+                  if row - 3 >= 0 and col + 3 < 10:
+                    if board[row - 3][col + 3] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                if row - 3 >= 0 and col + 3 < 10:
+                  if board[row - 3][col + 3] != player:
+                    return True
+                else:
+                  return True
+            else:
+              return True
+
+          #          *
+          #        *
+          #     *
+          #   P
+          # *
+          if row <= 8 and col >= 1 and row >= 3 and col <= 6:
+            if board[row - 3][col + 3] == player and board[row - 2][col + 2] == player and board[row - 1][col + 1] == player and board[row + 1][col - 1] == player:
+              if player == 1:
+                if row + 2 < 10 and col - 2 >= 0:
+                  if board[row + 2][col - 2] != player:
+                    if row - 4 >= 0 and col + 4 < 10:
+                      if board[row - 4][col + 4] != player:
+                        return True
+                    else:
+                      return True
+                else:
+                  if row - 4 >= 0 and col + 4 < 10:
+                    if board[row - 4][col + 4] != player:
+                      return True
+                  else:
+                    return True
+              else:
+                return True
+
+            #          *
+            #        *
+            #     *
+            #   *
+            # P
+            if row >= 4 and col <= 5:
+              if board[row - 4][col + 4] == player and board[row - 3][col + 3] == player and board[row - 2][col + 2] == player and board[row - 1][col + 1] == player:
+                if player == 1:
+                  if row + 1 < 10 and col - 1 >= 0:
+                    if board[row + 1][col - 1] != player:
+                      if row - 5 >= 0 and col + 5 < 10:
+                        if board[row - 5][col + 5] != player:
+                          return True
+                      else:
+                        return True
+                  else:
+                    if row - 5 >= 0 and col + 5 < 10:
+                      if board[row - 5][col + 5] != player:
+                        return True
+                    else:
+                      return True
+                else:
+                  return True
+
+  return False
+
+def getHeuristic(board, move, player):
+  row = move[0]
+  col = move[1]
+  piece = board[row][col]
+
+  potentialWins = 0
+
+  if col + 1 < 10:
+    potentialWins += board[row][col + 1] == player
+    potentialWins += (row + 1 < 10 and board[row + 1][col + 1] == player)
+    potentialWins += (row - 1 >= 0 and board[row - 1][col + 1] == player)
+    if col + 2 < 10:
+      potentialWins += board[row][col + 2] == player
+      potentialWins += (row + 2 < 10  and board[row + 2][col + 2] == player)
+      potentialWins += (row - 2 >= 0 and board[row - 2][col + 2] == player)
+      if col + 3 < 10:
+        potentialWins += board[row][col + 3] == player
+        potentialWins += (row + 3 < 10 and board[row + 3][col + 3] == player)
+        potentialWins += (row - 3 >= 0 and board[row - 3][col + 3] == player)
+        if col + 4 < 10:
+          potentialWins += board[row][col + 4] == player
+          potentialWins += (row + 4 < 10 and board[row + 4][col + 4] == player)
+          potentialWins += (row - 4 >= 0 and board[row - 4][col + 4] == player)
+
+  if col - 1 < 10:
+    potentialWins += board[row][col - 1] == player
+    potentialWins += (row + 1 < 10 and board[row + 1][col - 1] == player)
+    potentialWins += (row - 1 >= 0 and board[row - 1][col - 1] == player)
+    if col - 2 < 10:
+      potentialWins += board[row][col - 2] == player
+      potentialWins += (row + 2 < 10  and board[row + 2][col - 2] == player)
+      potentialWins += (row - 2 >= 0 and board[row - 2][col - 2] == player)
+      if col - 3 < 10:
+        potentialWins += board[row][col - 3] == player
+        potentialWins += (row + 3 < 10 and board[row + 3][col - 3] == player)
+        potentialWins += (row - 3 >= 0 and board[row - 3][col - 3] == player)
+        if col - 4 < 10:
+          potentialWins += board[row][col - 4] == player
+          potentialWins += (row + 4 < 10 and board[row + 4][col - 4] == player)
+          potentialWins += (row - 4 >= 0 and board[row - 4][col - 4] == player)
+
+  # Vertical
+  if row + 1 < 10:
+    potentialWins += board[row + 1][col] == player
+    if row + 2 < 10:
+      potentialWins += board[row + 2][col] == player
+      if row + 3 < 10:
+        potentialWins += board[row + 3][col] == player
+        potentialWins += (row + 4 < 10 and board[row + 4][col] == player)
+
+  if row - 1 >= 0:
+    potentialWins += board[row - 1][col] == player
+    if row - 2 >= 0:
+      potentialWins += board[row - 2][col] == player
+      if row - 3 >= 0:
+        potentialWins += board[row - 3][col] == player
+        potentialWins += (row - 4 >= 0 and board[row - 4][col] == player)
+
+  return potentialWins*1000 + HEURISTIC_VALUES[row*10 + col]*20
+
+def max_play(board, player, depth, max_depth, startTime):
   nextPlayer = 2 if player == 1 else 1
-  moves = getPossibleMoves(board, player)
+  moves = getPossibleMoves(board)
   best_score = MIN_INT
-  for move, newBoard in moves.iteritems():
-    score = min_play(newBoard, nextPlayer, depth + 1)
-    if score > best_score:
-      best_score = score
+  for move in moves:
+    if time.time() - startTime > MAX_TURN_LENGTH:
+      break
+    # Set the move.
+    board[move[0]][move[1]] = player
+    h = getHash(board)
+    if h not in playedMoves:
+      playedMoves.add(h)
+      score = MIN_INT
+      if isWin(board, player, move):
+        score = MAX_INT
+      else:
+        heuristic = getHeuristic(board, move, player)
+        #print h
+        if depth >= max_depth:
+          score = heuristic*depth
+        else:
+          score = min_play(board, nextPlayer, depth + 1, max_depth, startTime)
+      if score > best_score:
+        best_score = score
+    # Unset the move.
+    board[move[0]][move[1]] = 0
   return best_score
 
-def min_play(board, player, depth):
-  h = getHash(board, player)
-  # Bail out for final board states.
-  if player == 1 and h in PLAYER_1_WINS:
-    return MIN_INT
-  elif player == 2 and h in PLAYER_2_WINS:
-    return MIN_INT
-
-  # Bail out when we get too deep.
-  if depth > MAX_DEPTH:
-    return h
-
+def min_play(board, player, depth, max_depth, startTime):
   nextPlayer = 2 if player == 1 else 1
-  moves = getPossibleMoves(board, player)
+  moves = getPossibleMoves(board)
   best_score = MAX_INT
-  for move, newBoard in moves.iteritems():
-    score = max_play(newBoard, nextPlayer, depth + 1)
-    if score < best_score:
-      best_score = score
+  for move in moves:
+    if time.time() - startTime > MAX_TURN_LENGTH:
+      break
+    # Set the move.
+    board[move[0]][move[1]] = player
+    h = getHash(board)
+    if h not in playedMoves:
+      playedMoves.add(h)
+      score = MAX_INT
+      if isWin(board, player, move):
+        score = MIN_INT
+      else:
+        heuristic = getHeuristic(board, move, player)
+        #print h
+        if depth >= max_depth:
+          score = heuristic*depth
+        else:
+          score = max_play(board, nextPlayer, depth + 1, max_depth, startTime)
+      if score < best_score:
+        best_score = score
+    # Unset the move.
+    board[move[0]][move[1]] = 0
   return best_score
 
-def minimax(board, player):
-  moves = getPossibleMoves(board, player)
-  best_move = None
+def minimax(board, player, currentDepth):
   best_score = MIN_INT
   nextPlayer = 2 if player == 1 else 1
-  for move, newBoard in moves.iteritems():
-    score = min_play(newBoard, nextPlayer, 0)
+  moves = getPossibleMoves(board)
+  best_move = moves[-1]
+  startTime = time.time()
+  for move in moves:
+    board[move[0]][move[1]] = player
+    score = min_play(board, nextPlayer, 0, MAX_DEPTH, startTime)
+    board[move[0]][move[1]] = 0
     if score > best_score:
       best_score = score
       best_move = move
@@ -112,12 +665,15 @@ def minimax(board, player):
 startingBoard = []
 
 # Parse the input. This assumes well formed input.
+currentMoveCount = 0
 for line in sys.stdin:
   columns = [ int(col.strip()) for col in line.split(' ') ]
+  currentMoveCount += 10 - columns.count(0)
   startingBoard.append(columns)
 
 # Remove the last row to figure out which player we are.
 currentPlayer = startingBoard[-1][0]
 del startingBoard[-1]
 
-print minimax(startingBoard, currentPlayer)
+bestMove = minimax(startingBoard, currentPlayer, currentMoveCount)
+print '%s %s' % bestMove
