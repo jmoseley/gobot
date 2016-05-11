@@ -14,14 +14,11 @@ def printBoard(board):
   for row in board:
     print ' '.join([ '%s' % r for r in row ])
 
-def getHash(board):
-  h = 0
-  for row in range(10):
-    for col in range(10):
-      piece = board[row][col]
-      if piece > 0:
-        h += TWO_HUNDRED_PRIMES[(row*10 + col)*piece]
-  return h
+def getHash(board, move, previousHash):
+  row = move[0]
+  col = move[1]
+  piece = board[row][col] - 1
+  return previousHash ^ ZOBRIST[piece][row*10 + col]
 
 hashes = set()
 emptyBoard = []
